@@ -1,0 +1,5 @@
+Flask==2.3.2
+feedparser==6.0.10
+pytz==2023.3
+markdown2==2.4.8
+python-dotenv==1.0.0

@@ -1,4 +1,4 @@
-# Paper Reader
+# AIPaper Reader
 
 一个简洁的arXiv论文阅读工具，帮助研究人员跟踪最新论文并生成摘要分析。
 
@@ -14,7 +14,7 @@
 
 1. 克隆仓库：
 ```bash
-git clone https://github.com/your-repo/paper_reader.git
+git clone https://github.com/firslov/AIPaper.git
 cd paper_reader
 ```
 
