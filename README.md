@@ -15,7 +15,7 @@
 1. 克隆仓库：
 ```bash
 git clone https://github.com/firslov/AIPaper.git
-cd paper_reader
+cd AIPaper
 ```
 
 2. 安装依赖：
