@@ -54,6 +54,8 @@ python crawler.py
 
 3. 访问 `http://localhost:8000` 查看论文列表
 
+   或者访问示例网站: [https://paper.aihao.world](https://paper.aihao.world)
+
 4. 点击分类查看详细论文卡片
 
 ## 项目结构
