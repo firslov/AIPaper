@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Paper Reader</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        darkred: '#991B1B',
+                    },
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'],
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* 通用 body 样式，带渐变背景 */
+        [x-cloak] {
+            display: none !important;
+        }
+
+        /* 移动端响应式样式 */
+        @media (min-width: 640px) {
+            .prose {
+                font-size: 0.95rem;
+                line-height: 1.6;
+            }
+        }
+    </style>
+
+    <!-- MathJax with better configuration -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                packages: { '[+]': ['ams', 'color', 'boldsymbol'] }
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: '.*'  // Process all content
+            },
+            loader: { load: ['[tex]/ams', '[tex]/color', '[tex]/boldsymbol'] },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Alpine.js with Collapse Plugin -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+</head>
+
+<body class="bg-gradient-to-r from-gray-50 to-blue-50 min-h-screen">
+    <div class="container mx-auto px-2 sm:px-4 py-4 sm:py-8" x-data="{ openPanel: null }">
+        <h2 class="text-xl sm:text-3xl font-bold text-gray-800 mb-2 sm:mb-4 p-3 sm:p-4 bg-white rounded-lg shadow-md">
+            <i class="fas fa-book-open mr-2 text-primary"></i>AI Paper Reader - {{ current_date }}
+        </h2>
+
+        <!-- 分类导航栏 -->
+        <div class="sticky top-0 z-10 mb-4 sm:mb-6 bg-white rounded-lg shadow-md overflow-x-auto">
+            <div class="flex space-x-1 p-2">
+                {% for folder, filepath, row_count in files %}
+                <a href="#{{ folder|replace(' ', '_') }}"
+                    class="px-3 py-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors
+                          hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+                          {% if loop.first %}bg-primary text-white hover:bg-blue-600{% else %}text-gray-700{% endif %}">
+                    {{ folder.split('-')[0] }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="space-y-2 sm:space-y-4">
+            {% for folder, filepath, row_count in files %}
+            <div id="{{ folder|replace(' ', '_') }}"
+                class="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg scroll-mt-16">
+                <button @click="openPanel === {{ loop.index }} ? openPanel = null : openPanel = {{ loop.index }}"
+                    class="w-full px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between focus:outline-none"
+                    :class="{
+                        'bg-primary text-white': openPanel === {{ loop.index }},
+                        'bg-gray-100 text-gray-800': openPanel !== {{ loop.index }},
+                        'bg-red-100 text-darkred': {{ row_count }} > 200,
+                        'bg-gray-200 text-gray-600': {{ row_count }} == 0
+                    }" data-row-count="{{ row_count }}">
+                    <div class="flex items-center">
+                        <span
+                            class="inline-flex items-center justify-center px-2 sm:px-3 py-1 rounded-full text-xs font-semibold mr-2 sm:mr-3"
+                            :class="{
+                                'bg-white text-primary': openPanel === {{ loop.index }} && {{ row_count }} <= 200,
+                                'bg-primary text-white': openPanel !== {{ loop.index }} && {{ row_count }} <= 200,
+                                'bg-darkred text-white': {{ row_count }} > 200,
+                                'bg-gray-600 text-white': {{ row_count }} == 0
+                            }">
+                            {{ row_count }}
+                        </span>
+                        <i class="fas fa-folder-open mr-2"></i>
+                        <span class="font-medium">{{ folder }}</span>
+                    </div>
+                    <i class="fas transition-transform duration-300" :class="{
+                            'fa-chevron-down': openPanel !== {{ loop.index }},
+                            'fa-chevron-up': openPanel === {{ loop.index }}
+                        }"></i>
+                </button>
+
+                <div x-show="openPanel === {{ loop.index }}" x-transition
+                    class="px-3 sm:px-6 py-3 sm:py-4 border-t border-gray-200">
+                    <div class="overflow-x-auto">
+                        <div x-data="{ isLoading: false, content: '' }" x-init="isLoading = true; 
+                                     fetch('/file/' + encodeURIComponent('{{ filepath }}'))
+                                         .then(response => response.json())
+                                         .then(data => { content = data.html; isLoading = false; 
+                                             setTimeout(() => MathJax.typeset(), 100); })">
+
+                            <div x-show="isLoading" class="flex justify-center py-8">
+                                <i class="fas fa-spinner fa-spin text-4xl text-primary"></i>
+                            </div>
+
+                            <template x-if="!isLoading">
+                                <div class="space-y-6" x-html="content"></div>
+                            </template>
+                            <script>
+                                document.addEventListener('alpine:initialized', () => {
+                                    setTimeout(() => MathJax.typeset(), 500);
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <footer class="mt-8 text-center text-gray-500">
+            <p>Designed by <a href="#"
+                    onclick="event.preventDefault(); document.getElementById('contactModal').showModal()"
+                    class="font-bold text-primary hover:underline">Hao</a></p>
+        </footer>
+
+        <dialog id="contactModal" class="p-0 rounded-lg shadow-xl backdrop:bg-black/50">
+            <div class="p-4">
+                <img src="{{ url_for('static', filename='wechat.jpg') }}" alt="Contact"
+                    class="w-48 sm:w-64 h-auto rounded">
+                <div class="mt-4 flex justify-end">
+                    <button onclick="document.getElementById('contactModal').close()"
+                        class="px-4 py-2 bg-primary text-white rounded hover:bg-blue-700">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </dialog>
+    </div>
+
+    <script>
+        // Add fade-in animation
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('animations', {
+                fadeIn: {
+                    'x-show.transition.opacity.duration.500': true
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

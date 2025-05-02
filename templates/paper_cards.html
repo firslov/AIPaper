@@ -1,0 +1,33 @@
+{% for paper in papers %}
+<div
+    class="paper-card bg-white rounded-xl shadow-md overflow-hidden mb-4 sm:mb-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
+    <div class="p-4 sm:p-6">
+        <div class="flex justify-between items-start">
+            <div class="flex items-baseline">
+                <span class="text-gray-400 mr-2 text-sm">{{ loop.index }}.</span>
+                <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-1 sm:mb-2">
+                    {{ paper.get('标题', paper.get('Title', '')) }}
+                </h3>
+            </div>
+            <a href="{{ paper.get('链接', paper.get('Link', '')) }}" target="_blank"
+                class="text-primary hover:text-primary-dark">
+                <i class="fas fa-external-link-alt"></i>
+            </a>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-500 mb-2 sm:mb-4">
+            <span class="mr-0 sm:mr-4 mb-1 sm:mb-0">
+                {{ paper.get('作者', paper.get('Authors', '')) }}
+            </span>
+            <span>
+                {{ paper.get('日期', paper.get('Date', '')) }}
+            </span>
+        </div>
+
+        <div class="prose max-w-none tex2jax_process"
+            style="white-space: pre-wrap; font-size: 0.85rem; line-height: 1.5;">
+            {{ paper.get('QA', paper.get('Abstract', '')).strip() | safe }}
+        </div>
+    </div>
+</div>
+{% endfor %}
